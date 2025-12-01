@@ -17,7 +17,7 @@ class StoryResource extends Resource
 {
     protected static ?string $model = Story::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-book-open';
 
     public static function form(Form $form): Form
     {
@@ -25,21 +25,23 @@ class StoryResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('title')
                     ->required()
-                    ->maxLength(150),
+                    ->maxLength(150)
+                    ->columnSpanFull(),
                 Forms\Components\Textarea::make('content')
                     ->required()
+                    ->rows(10)
                     ->columnSpanFull(),
-                Forms\Components\TextInput::make('status')
-                    ->required()
-                    ->maxLength(255)
-                    ->default('waiting for review'),
-                Forms\Components\TextInput::make('author_id')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('reviewer_id')
-                    ->numeric(),
-                Forms\Components\Textarea::make('feedback')
-                    ->columnSpanFull(),
+                // Forms\Components\TextInput::make('status')
+                //     ->required()
+                //     ->maxLength(255)
+                //     ->default('waiting for review'),
+                // Forms\Components\TextInput::make('author_id')
+                //     ->required()
+                //     ->numeric(),
+                // Forms\Components\TextInput::make('reviewer_id')
+                //     ->numeric(),
+                // Forms\Components\Textarea::make('feedback')
+                //     ->columnSpanFull(),
             ]);
     }
 
@@ -51,12 +53,12 @@ class StoryResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('status')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('author_id')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('reviewer_id')
-                    ->numeric()
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('author.name')
+                    ->sortable()
+                    ->searchable(),
+                // Tables\Columns\TextColumn::make('reviewer_id')
+                //     ->numeric()
+                //     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
