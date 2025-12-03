@@ -30,3 +30,5 @@ class AppServiceProvider extends ServiceProvider
         Model::unguard();
     }
 }
+
+//YT menit 57:12

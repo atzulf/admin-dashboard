@@ -37,7 +37,8 @@ class StoryPolicy
      */
     public function update(User $user, Story $story): bool
     {
-        return true;
+        return $user->hasRole('creative') &&
+            $story->author_id === $user->id;
     }
 
     /**
