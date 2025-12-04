@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('title', 150);
             $table->text('content');
-            $table->string('status')->default('waiting for review'); // e.g., 'waiting for review', 'approved', 'canceled', in review', rework'
+            $table->string('status')->default('waiting for review'); // e.g., 'waiting for review', 'needs revision', 'approved', 'published'
             $table->foreignId('author_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('reviewer_id')->nullable()->constrained('users')->onDelete('set null');
             $table->text('feedback')->nullable();

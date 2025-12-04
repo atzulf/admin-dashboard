@@ -2,26 +2,26 @@
 
 namespace App\Policies;
 
-use App\Models\Story;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
+use Illuminate\Testing\Fluent\Concerns\Has;
 
-class StoryPolicy
+class UsersPolicy
 {
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->hasRole('admin');
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Story $story): bool
+    public function view(User $user, User $model): bool
     {
-        return true;
+        return $user->hasRole('admin');
     }
 
     /**
@@ -29,40 +29,38 @@ class StoryPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasRole('creative');
+        return $user->hasRole('admin');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Story $story): bool
+    public function update(User $user, User $model): bool
     {
-        return $user->hasRole('creative') &&
-            $story->author_id === $user->id &&
-            in_array($story->status, ['waiting for review', 'needs revision']);
+        return $user->hasRole('admin');
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Story $story): bool
+    public function delete(User $user, User $model): bool
     {
-        return true;
+        return $user->hasRole('admin');
     }
 
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, Story $story): bool
+    public function restore(User $user, User $model): bool
     {
-        return true;
+        return $user->hasRole('admin');
     }
 
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, Story $story): bool
+    public function forceDelete(User $user, User $model): bool
     {
-        return true;
+        return $user->hasRole('admin');
     }
 }

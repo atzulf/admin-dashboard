@@ -29,7 +29,7 @@ class StoryResource extends Resource
                     ->columnSpanFull(),
                 Forms\Components\Textarea::make('content')
                     ->required()
-                    ->rows(10)
+                    ->rows(14)
                     ->columnSpanFull(),
                 // Forms\Components\TextInput::make('status')
                 //     ->required()
@@ -78,13 +78,33 @@ class StoryResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->visible(fn(): bool => auth()->user()->hasRole('admin'))
+                    ->requiresConfirmation(true)
+                    ->modalHeading('Delete Story')
+                    ->modalDescription('Are you sure you want to delete this story? This action cannot be undone.')
+                    ->successNotificationTitle('Story Deleted')
+                    ->failureNotificationTitle('Failed to Delete Story'),
+                Tables\Actions\Action::make('Review')
+                    ->label('Review')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn(Story $record) => auth()->user()->hasRole('manager') && $record->status === 'waiting for review')
+                    ->requiresConfirmation()
+                    ->modalHeading('Approve Story')
+                    ->modalDescription('Are you sure you want to approve this story?')
+                    ->action(function (Story $record) {
+                        $record->update(['status' => 'approved']);
+                        return redirect(static::getUrl('view', ['record' => $record]));
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                     Tables\Actions\ForceDeleteBulkAction::make(),
                     Tables\Actions\RestoreBulkAction::make(),
-                ]),
+                ])
+                    ->visible(fn() => auth()->user()->hasRole('admin')),
             ]);
     }
 
@@ -110,6 +130,9 @@ class StoryResource extends Resource
         return parent::getEloquentQuery()
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
-            ]);
+            ])
+            ->when(auth()->user()->hasRole('creative'), function (Builder $query) {
+                $query->where('author_id', auth()->id());
+            });
     }
 }
