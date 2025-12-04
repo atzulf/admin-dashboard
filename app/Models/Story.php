@@ -10,9 +10,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Story extends Model
 {
     use SoftDeletes;
-    
+
     public function author()
     {
         return $this->belongsTo(User::class, 'author_id', 'id');
+    }
+
+    public function reviewer()
+    {
+        return $this->belongsTo(User::class, 'reviewer_id', 'id');
     }
 }

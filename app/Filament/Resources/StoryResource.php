@@ -56,9 +56,9 @@ class StoryResource extends Resource
                 Tables\Columns\TextColumn::make('author.name')
                     ->sortable()
                     ->searchable(),
-                // Tables\Columns\TextColumn::make('reviewer_id')
-                //     ->numeric()
-                //     ->sortable(),
+                Tables\Columns\TextColumn::make('reviewer.name')
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
