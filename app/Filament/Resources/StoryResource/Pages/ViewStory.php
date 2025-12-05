@@ -17,6 +17,7 @@ class ViewStory extends ViewRecord
             Actions\EditAction::make(),
 
             Actions\Action::make('published')
+                ->color('success')
                 ->label('Publish Story')
                 ->visible(fn() => auth()->user()->hasRole('manager') && $this->record->status === 'approved')
                 ->form([

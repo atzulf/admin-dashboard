@@ -3,8 +3,8 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\StoryResource\Pages;
-use App\Filament\Resources\StoryResource\RelationManagers;
 use App\Models\Story;
+use App\Models\User; // Import User untuk mention
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,12 +13,19 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
+// IMPORT PENTING UNTUK TAMPILAN VIEW & KOMENTAR
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
+use Kirschbaum\Commentions\Filament\Infolists\Components\CommentsEntry;
+
 class StoryResource extends Resource
 {
     protected static ?string $model = Story::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
 
+    // 1. FORM (Halaman Edit & Create) - Tidak ada komentar di sini
     public static function form(Form $form): Form
     {
         return $form
@@ -31,20 +38,56 @@ class StoryResource extends Resource
                     ->required()
                     ->rows(14)
                     ->columnSpanFull(),
-                // Forms\Components\TextInput::make('status')
-                //     ->required()
-                //     ->maxLength(255)
-                //     ->default('waiting for review'),
-                // Forms\Components\TextInput::make('author_id')
-                //     ->required()
-                //     ->numeric(),
-                // Forms\Components\TextInput::make('reviewer_id')
-                //     ->numeric(),
-                // Forms\Components\Textarea::make('feedback')
-                //     ->columnSpanFull(),
             ]);
     }
 
+    // 2. INFOLIST (Halaman View) - Komentar muncul di sini!
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                // Bagian Atas: Detail Story
+                Section::make('Detail Story')
+                    ->schema([
+                        TextEntry::make('title')
+                            ->label('Judul')
+                            ->weight('bold')
+                            ->size(TextEntry\TextEntrySize::Large),
+
+                        TextEntry::make('status')
+                            ->badge()
+                            ->color(fn(string $state): string => match ($state) {
+                                'published' => 'primary',
+                                'approved' => 'success',
+                                'needs revision' => 'danger',
+                                default => 'warning',
+                            }),
+
+                        TextEntry::make('author.name')
+                            ->label('Penulis')
+                            ->icon('heroicon-m-user'),
+
+                        TextEntry::make('created_at')
+                            ->label('Dibuat Tanggal')
+                            ->dateTime(),
+
+                        TextEntry::make('content')
+                            ->label('Isi Story')
+                            ->markdown()
+                            ->columnSpanFull(),
+                    ])->columns(2),
+
+                // Bagian Bawah: DISKUSI REVISI (Plugin Kirschbaum)
+                Section::make('Diskusi & Revisi')
+                    ->description('Area diskusi antara Manager dan Creative.')
+                    ->schema([
+                        CommentsEntry::make('comments')
+                            ->mentionables(fn($record) => User::all()) // Fitur mention user
+                    ]),
+            ]);
+    }
+
+    // 3. TABLE (Halaman List)
     public static function table(Table $table): Table
     {
         return $table
@@ -52,6 +95,14 @@ class StoryResource extends Resource
                 Tables\Columns\TextColumn::make('title')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('status')
+                    ->badge()
+                    ->colors([
+                        'warning' => 'waiting for review',
+                        'danger' => 'needs revision',
+                        'success' => 'approved',
+                        'primary' => 'published',
+                        'secondary' => 'cancelled',
+                    ])
                     ->searchable(),
                 Tables\Columns\TextColumn::make('author.name')
                     ->sortable()
@@ -67,34 +118,32 @@ class StoryResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                Tables\Actions\ViewAction::make(), // Tombol ini akan membuka Infolist di atas
                 Tables\Actions\EditAction::make(),
+
+                // Action Delete khusus Admin
                 Tables\Actions\DeleteAction::make()
                     ->visible(fn(): bool => auth()->user()->hasRole('admin'))
                     ->requiresConfirmation(true)
                     ->modalHeading('Delete Story')
-                    ->modalDescription('Are you sure you want to delete this story? This action cannot be undone.')
-                    ->successNotificationTitle('Story Deleted')
-                    ->failureNotificationTitle('Failed to Delete Story'),
+                    ->successNotificationTitle('Story Deleted'),
+
+                // Action Review khusus Manager
                 Tables\Actions\Action::make('Review')
-                    ->label('Review')
+                    ->label('Approve') // Saya ganti label jadi Approve biar jelas
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn(Story $record) => auth()->user()->hasRole('manager') && $record->status === 'waiting for review')
                     ->requiresConfirmation()
                     ->modalHeading('Approve Story')
-                    ->modalDescription('Are you sure you want to approve this story?')
                     ->action(function (Story $record) {
                         $record->update(['status' => 'approved']);
+                        // Redirect ke halaman View agar bisa lanjut komen
                         return redirect(static::getUrl('view', ['record' => $record]));
                     }),
             ])
@@ -103,8 +152,7 @@ class StoryResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                     Tables\Actions\ForceDeleteBulkAction::make(),
                     Tables\Actions\RestoreBulkAction::make(),
-                ])
-                    ->visible(fn() => auth()->user()->hasRole('admin')),
+                ])->visible(fn() => auth()->user()->hasRole('admin')),
             ]);
     }
 
