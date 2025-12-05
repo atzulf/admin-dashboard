@@ -55,7 +55,11 @@ class ViewStory extends ViewRecord
                 ->action(function () {
                     $this->record->status = 'cancelled';
                     $this->record->save();
-                    $this->notify('success', 'Story cancelled successfully.');
+                    Notification::make()
+                        ->title('Story Cancelled')
+                        ->body('The story has been cancelled.')
+                        ->success()
+                        ->send();
                     $this->redirect(static::getResource()::getUrl('view', ['record' => $this->record]));
                 }),
 
@@ -96,6 +100,25 @@ class ViewStory extends ViewRecord
                     Notification::make()
                         ->title('Story Approved')
                         ->body('The story has been approved.')
+                        ->success()
+                        ->send();
+                    $this->redirect(static::getResource()::getUrl('view', ['record' => $this->record]));
+                }),
+
+            Actions\Action::make('Reactivate')
+                ->label('Reactivate Story')
+                ->color('warning')
+                ->icon('heroicon-o-arrow-path')
+                ->visible(fn() => auth()->user()->hasRole('admin') && $this->record->status === 'cancelled')
+                ->requiresConfirmation()
+                ->modalHeading('Reactivate Story')
+                ->modalDescription('This will change the story status from cancelled back to waiting for review.')
+                ->action(function () {
+                    $this->record->status = 'waiting for review';
+                    $this->record->save();
+                    Notification::make()
+                        ->title('Story Reactivated')
+                        ->body('The story has been reactivated and is now waiting for review.')
                         ->success()
                         ->send();
                     $this->redirect(static::getResource()::getUrl('view', ['record' => $this->record]));
