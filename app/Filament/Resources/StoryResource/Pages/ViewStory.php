@@ -84,6 +84,23 @@ class ViewStory extends ViewRecord
                 ->modalHeading('Request Revision')
                 ->modalDescription('Are you sure you want to request a revision for this story?'),
 
+            Actions\Action::make('Approve')
+                ->label('Approve Story')
+                ->color('success')
+                ->visible(fn() => auth()->user()->hasRole('manager') && in_array($this->record->status, ['waiting for review', 'needs revision']))
+                ->requiresConfirmation()
+                ->modalHeading('Approve Story')
+                ->action(function () {
+                    $this->record->status = 'approved';
+                    $this->record->save();
+                    Notification::make()
+                        ->title('Story Approved')
+                        ->body('The story has been approved.')
+                        ->success()
+                        ->send();
+                    $this->redirect(static::getResource()::getUrl('view', ['record' => $this->record]));
+                }),
+
         ];
     }
 }
