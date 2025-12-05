@@ -41,5 +41,3 @@ class AppServiceProvider extends ServiceProvider
         );
     }
 }
-
-//YT menit 57:12
