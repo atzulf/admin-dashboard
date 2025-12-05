@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Listeners\SendStoryCommentNotification;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use App\Policies\RolePolicy;
@@ -11,6 +12,8 @@ use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Database\Eloquent\Model;
+use Kirschbaum\Commentions\Events\UserIsSubscribedToCommentableEvent;
+use Illuminate\Support\Facades\Event;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -31,6 +34,11 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Permission::class, PermissionPolicy::class);
         Gate::policy(User::class, UsersPolicy::class);
         Model::unguard();
+
+        Event::listen(
+            UserIsSubscribedToCommentableEvent::class,
+            SendStoryCommentNotification::class,
+        );
     }
 }
 
