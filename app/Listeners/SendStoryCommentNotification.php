@@ -2,34 +2,57 @@
 
 namespace App\Listeners;
 
-use Kirschbaum\Commentions\Events\UserIsSubscribedToCommentableEvent;
+use Kirschbaum\Commentions\Events\CommentWasCreatedEvent; // <-- Event Baru
 use Filament\Notifications\Notification;
 use Filament\Notifications\Actions\Action;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
+use App\Filament\Resources\StoryResource;
+use App\Models\User;
 
-class SendStoryCommentNotification implements ShouldQueue
+class SendStoryCommentNotification
 {
-    public function handle(UserIsSubscribedToCommentableEvent $event): void
+    public function handle(CommentWasCreatedEvent $event): void
     {
-        // 1. Cek: Jangan kirim notif ke diri sendiri (Penulis komentar gak perlu dikasih tau)
-        if ($event->user->id === $event->comment->commenter->id) {
-            return;
+        $comment = $event->comment;
+
+        // 1. Tentukan Siapa Penulisnya
+        $penulis = null;
+        if ($comment->commenter_id) {
+            $penulis = User::find($comment->commenter_id);
+        }
+        if (! $penulis && Auth::check()) {
+            $penulis = Auth::user();
         }
 
-        // 2. Kirim Notifikasi Cantik ke Lonceng Filament
-        Notification::make()
-            ->title('Komentar Baru')
-            ->body($event->comment->commenter->name . ': "' . Str::limit($event->comment->body, 50) . '"')
-            ->icon('heroicon-o-chat-bubble-left-right') // Icon Chat
-            ->actions([
-                // Tombol "Lihat" yang mengarah ke halaman View Story
-                Action::make('view')
-                    ->label('Lihat Story')
-                    ->button()
-                    ->url(route('filament.admin.resources.stories.view', ['record' => $event->comment->commentable_id]))
-                    ->markAsRead(),
-            ])
-            ->sendToDatabase($event->user); // Kirim ke user yang subscribe
+        // 2. Ambil Story (Object yang dikomentari)
+        $story = $comment->commentable;
+
+        // 3. Ambil Semua Orang yang Subscribe ke Story ini
+        // (Biasanya Manager & Author otomatis subscribe)
+        $subscribers = $story->getSubscribers();
+
+        // 4. Looping: Kirim ke semua subscriber KECUALI penulis sendiri
+        foreach ($subscribers as $subscriber) {
+
+            // Jangan kirim notif ke diri sendiri
+            if ($penulis && $subscriber->id === $penulis->id) {
+                continue;
+            }
+
+            // Kirim Notifikasi
+            Notification::make()
+                ->title('Komentar Baru dari ' . ($penulis ? $penulis->name : 'Seseorang'))
+                ->body('"' . Str::limit($comment->body, 50) . '"')
+                ->icon('heroicon-o-chat-bubble-left-right')
+                ->actions([
+                    Action::make('view')
+                        ->label('Lihat Story')
+                        ->button()
+                        ->url(StoryResource::getUrl('view', ['record' => $story->id]))
+                        ->markAsRead(),
+                ])
+                ->sendToDatabase($subscriber);
+        }
     }
 }

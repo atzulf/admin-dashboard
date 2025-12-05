@@ -138,7 +138,7 @@ class StoryResource extends Resource
                     ->label('Approve') // Saya ganti label jadi Approve biar jelas
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->visible(fn(Story $record) => auth()->user()->hasRole('manager') && $record->status === 'waiting for review')
+                    ->visible(fn(Story $record) => auth()->user()->hasRole('manager') && in_array($record->status, ['waiting for review', 'needs revision']))
                     ->requiresConfirmation()
                     ->modalHeading('Approve Story')
                     ->action(function (Story $record) {

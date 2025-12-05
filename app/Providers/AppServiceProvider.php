@@ -12,8 +12,8 @@ use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Database\Eloquent\Model;
-use Kirschbaum\Commentions\Events\UserIsSubscribedToCommentableEvent;
 use Illuminate\Support\Facades\Event;
+use Kirschbaum\Commentions\Events\CommentWasCreatedEvent;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -36,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
         Model::unguard();
 
         Event::listen(
-            UserIsSubscribedToCommentableEvent::class,
+            CommentWasCreatedEvent::class,
             SendStoryCommentNotification::class,
         );
     }
