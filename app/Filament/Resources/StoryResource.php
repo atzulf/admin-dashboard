@@ -18,6 +18,8 @@ use Filament\Infolists\Infolist;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Kirschbaum\Commentions\Filament\Infolists\Components\CommentsEntry;
+use Awcodes\Curator\Components\Forms\CuratorPicker;
+use Awcodes\Curator\Components\Tables\CuratorColumn;
 
 class StoryResource extends Resource
 {
@@ -37,6 +39,12 @@ class StoryResource extends Resource
                 Forms\Components\Textarea::make('content')
                     ->required()
                     ->rows(14)
+                    ->columnSpanFull(),
+
+                CuratorPicker::make('featured_image_id')
+                    ->label('Featured Image')
+                    ->relationship('featuredImage', 'id') // Sesuai nama fungsi di Model
+                    ->buttonLabel('Pilih dari Library')
                     ->columnSpanFull(),
             ]);
     }
@@ -118,6 +126,9 @@ class StoryResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                CuratorColumn::make('featuredImage')
+                    ->label('Cover')
+                    ->size(50),
             ])
             ->filters([
                 Tables\Filters\TrashedFilter::make(),

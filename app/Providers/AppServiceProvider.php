@@ -39,5 +39,7 @@ class AppServiceProvider extends ServiceProvider
             CommentWasCreatedEvent::class,
             SendStoryCommentNotification::class,
         );
+
+        set_time_limit(300);
     }
 }

@@ -23,4 +23,16 @@ class Story extends Model implements Commentable
     {
         return $this->belongsTo(User::class, 'reviewer_id', 'id');
     }
+
+    protected $fillable = [
+        'title',
+        'content',
+        'status',
+        'featured_image_id',
+    ];
+
+    public function featuredImage()
+    {
+        return $this->belongsTo(\Awcodes\Curator\Models\Media::class, 'featured_image_id', 'id');
+    }
 }

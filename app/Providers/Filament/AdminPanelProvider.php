@@ -56,7 +56,15 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-            ->plugin(FilamentSpatieRolesPermissionsPlugin::make())
-        ;
+            ->plugins([
+                FilamentSpatieRolesPermissionsPlugin::make(),
+
+                \Awcodes\Curator\CuratorPlugin::make()
+                    ->label('Media')
+                    ->pluralLabel('Media Library')
+                    ->navigationIcon('heroicon-o-photo')
+                    ->navigationSort(2)
+                    ->navigationCountBadge(),
+            ]);;
     }
 }
