@@ -45,6 +45,7 @@ class StoryResource extends Resource
                     ->label('Featured Image')
                     ->relationship('featuredImage', 'id') // Sesuai nama fungsi di Model
                     ->buttonLabel('Pilih dari Library')
+
                     ->columnSpanFull(),
             ]);
     }
